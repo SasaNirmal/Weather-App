@@ -7,42 +7,60 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class CityService {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final List<Long> cityCodes = new ArrayList<>();
 
     public CityService() {
-        try (InputStream inputStream = getClass().getResourceAsStream("/cityCodes.json")) {
-            if (inputStream != null) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(inputStream);
-                loadCityCodes(rootNode);
-            } else {
-                throw new IllegalArgumentException("cityCodes.json file not found.");
+        try (InputStream inputStream = Thread.currentThread()
+                .getContextClassLoader()
+                .getResourceAsStream("cities.json")) {
+            if (inputStream == null) {
+                throw new IllegalStateException("`cities.json` file not found on classpath.");
             }
+            JsonNode rootNode = OBJECT_MAPPER.readTree(inputStream);
+            loadCityCodes(rootNode);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load city codes.", e);
+            throw new RuntimeException("Failed to load city codes from `cities.json`.", e);
         }
     }
 
     private void loadCityCodes(JsonNode rootNode) {
-        if (rootNode != null) {
-            JsonNode cityCodeNode = rootNode.get("cityCode");
-            if (cityCodeNode != null && cityCodeNode.isArray()) {
-                for (JsonNode codeNode : cityCodeNode) {
-                    cityCodes.add(codeNode.asLong());
-                }
-            } else {
-                throw new IllegalArgumentException("City code is missing or invalid in the JSON data.");
-            }
-        } else {
+        if (rootNode == null) {
             throw new IllegalArgumentException("Root JSON node is null.");
+        }
+
+        JsonNode arrayNode = null;
+        if (rootNode.isArray()) {
+            arrayNode = rootNode;
+        } else if (rootNode.has("cityCode")) {
+            arrayNode = rootNode.get("cityCode");
+        } else if (rootNode.has("cityCodes")) {
+            arrayNode = rootNode.get("cityCodes");
+        }
+
+        if (arrayNode == null || !arrayNode.isArray()) {
+            throw new IllegalArgumentException("`cityCode` or `cityCodes` array missing in `cities.json`.");
+        }
+
+        for (JsonNode codeNode : arrayNode) {
+            if (codeNode.isNumber()) {
+                cityCodes.add(codeNode.asLong());
+            } else if (codeNode.isTextual()) {
+                try {
+                    cityCodes.add(Long.parseLong(codeNode.asText()));
+                } catch (NumberFormatException ignored) {
+                    // skip invalid entries
+                }
+            }
         }
     }
 
     public List<Long> getCityCodes() {
-        return cityCodes;
+        return Collections.unmodifiableList(new ArrayList<>(cityCodes));
     }
 }
