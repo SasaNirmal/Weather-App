@@ -1,28 +1,470 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Weather App</title>
+    <title>Weather Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; padding: 20px; }
-        .weather-card { margin-bottom: 20px; }
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h1 {
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .search-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .weather-card {
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1.25rem;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .weather-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .temp-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: #667eea;
+            margin: 1rem 0;
+        }
+
+        .weather-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .weather-detail:last-child {
+            border-bottom: none;
+        }
+
+        .weather-detail i {
+            color: #667eea;
+            margin-right: 0.5rem;
+        }
+
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .stats-card h3 {
+            color: #667eea;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1 class="text-center mb-4">Weather Information</h1>
-    <div class="row">
-        <div th:each="weather : ${weatherList}" class="col-md-4 col-sm-6 weather-card">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${weather.name}"></h5>
-                    <p class="card-text">Condition: <span th:text="${weather.weather[0].description}"></span></p>
-                    <p class="card-text">Temperature: <span th:text="${weather.main.temp} + ' °C'"></span></p>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-cloud-sun"></i> Weather Dashboard</h1>
+                </div>
+                <div class="col-md-6">
+                    <div class="user-info">
+                        <span th:if="${userName}" th:text="'Welcome, ' + ${userName}">Welcome</span>
+                        <span th:unless="${userName}" th:text="'Welcome, User'">Welcome</span>
+                        <form th:action="@{/logout}" method="post" style="margin: 0;">
+                            <button type="submit" class="btn logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="container">
+        <!-- Search and Filter Section -->
+        <div class="search-box">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0" style="border-radius: 25px 0 0 25px;">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control search-input border-start-0"
+                               placeholder="Search cities..." style="border-radius: 0 25px 25px 0;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select id="sortSelect" class="form-select search-input">
+                        <option value="name">Sort by Name</option>
+                        <option value="temp-asc">Temperature (Low to High)</option>
+                        <option value="temp-desc">Temperature (High to Low)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-buttons mt-3">
+                <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                    <i class="fas fa-globe"></i> All
+                </button>
+                <button class="btn btn-outline-success filter-btn" data-filter="Clear">
+                    <i class="fas fa-sun"></i> Clear
+                </button>
+                <button class="btn btn-outline-info filter-btn" data-filter="Clouds">
+                    <i class="fas fa-cloud"></i> Cloudy
+                </button>
+                <button class="btn btn-outline-primary filter-btn" data-filter="Rain">
+                    <i class="fas fa-cloud-rain"></i> Rainy
+                </button>
+                <button class="btn btn-outline-secondary filter-btn" data-filter="Mist">
+                    <i class="fas fa-smog"></i> Misty
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row" th:if="${weatherList != null and !weatherList.isEmpty()}">
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class="fas fa-city fa-2x text-primary"></i>
+                    <h3 th:text="${#lists.size(weatherList)}">0</h3>
+                    <p class="text-muted mb-0">Cities Tracked</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class="fas fa-temperature-high fa-2x text-danger"></i>
+                    <h3 id="avgTemp">--</h3>
+                    <p class="text-muted mb-0">Average Temp</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class="fas fa-sun fa-2x text-warning"></i>
+                    <h3 id="clearCount">--</h3>
+                    <p class="text-muted mb-0">Clear Skies</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <i class="fas fa-cloud-rain fa-2x text-info"></i>
+                    <h3 id="rainyCount">--</h3>
+                    <p class="text-muted mb-0">Rainy</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Cards -->
+        <div class="row" id="weatherContainer">
+            <div th:each="weather : ${weatherList}" class="col-lg-4 col-md-6 weather-card"
+                 th:attr="data-city=${weather.name}, data-temp=${weather.main.temp}, data-condition=${weather.weather[0].main}">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${weather.name}">City</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="weather-icon" th:switch="${weather.weather[0].main}">
+                            <i th:case="'Clear'" class="fas fa-sun text-warning"></i>
+                            <i th:case="'Clouds'" class="fas fa-cloud text-secondary"></i>
+                            <i th:case="'Rain'" class="fas fa-cloud-rain text-primary"></i>
+                            <i th:case="'Mist'" class="fas fa-smog text-info"></i>
+                            <i th:case="*" class="fas fa-cloud-sun text-muted"></i>
+                        </div>
+
+                        <div class="temp-display">
+                            <span th:text="${#numbers.formatDecimal(weather.main.temp, 1, 1)}">0.0</span>°C
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <span class="badge badge-custom"
+                                  th:classappend="${weather.weather[0].main == 'Clear'} ? 'bg-warning' :
+                                                  ${weather.weather[0].main == 'Clouds'} ? 'bg-secondary' :
+                                                  ${weather.weather[0].main == 'Rain'} ? 'bg-primary' : 'bg-info'"
+                                  th:text="${weather.weather[0].description}">
+                                Condition
+                            </span>
+                        </div>
+
+                        <div class="weather-detail">
+                            <span><i class="fas fa-temperature-low"></i> Feels Like</span>
+                            <strong th:text="${#numbers.formatDecimal(weather.main.feels_like, 1, 1)} + '°C'">0°C</strong>
+                        </div>
+
+                        <div class="weather-detail">
+                            <span><i class="fas fa-tint"></i> Humidity</span>
+                            <strong th:text="${weather.main.humidity} + '%'">0%</strong>
+                        </div>
+
+                        <div class="weather-detail">
+                            <span><i class="fas fa-compress-alt"></i> Pressure</span>
+                            <strong th:text="${weather.main.pressure} + ' hPa'">0 hPa</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+            <h4>No cities found</h4>
+            <p>Try adjusting your search or filter criteria</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Calculate and display statistics
+        function calculateStats() {
+            const cards = document.querySelectorAll('.weather-card');
+            let totalTemp = 0;
+            let clearCount = 0;
+            let rainyCount = 0;
+
+            cards.forEach(card => {
+                const temp = parseFloat(card.dataset.temp);
+                const condition = card.dataset.condition;
+
+                totalTemp += temp;
+                if (condition === 'Clear') clearCount++;
+                if (condition === 'Rain') rainyCount++;
+            });
+
+            const avgTemp = cards.length > 0 ? (totalTemp / cards.length).toFixed(1) : '--';
+            document.getElementById('avgTemp').textContent = avgTemp + '°C';
+            document.getElementById('clearCount').textContent = clearCount;
+            document.getElementById('rainyCount').textContent = rainyCount;
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const sortSelect = document.getElementById('sortSelect');
+        const weatherContainer = document.getElementById('weatherContainer');
+        const noResults = document.getElementById('noResults');
+
+        searchInput.addEventListener('input', filterAndSort);
+        sortSelect.addEventListener('change', filterAndSort);
+
+        // Filter buttons
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let activeFilter = 'all';
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeFilter = this.dataset.filter;
+                filterAndSort();
+            });
+        });
+
+        function filterAndSort() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const sortBy = sortSelect.value;
+            const cards = Array.from(document.querySelectorAll('.weather-card'));
+
+            // Filter
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const cityName = card.dataset.city.toLowerCase();
+                const condition = card.dataset.condition;
+
+                const matchesSearch = cityName.includes(searchTerm);
+                const matchesFilter = activeFilter === 'all' || condition === activeFilter;
+
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+
+            // Sort visible cards
+            const visibleCards = cards.filter(card => card.style.display !== 'none');
+
+            visibleCards.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.dataset.city.localeCompare(b.dataset.city);
+                    case 'temp-asc':
+                        return parseFloat(a.dataset.temp) - parseFloat(b.dataset.temp);
+                    case 'temp-desc':
+                        return parseFloat(b.dataset.temp) - parseFloat(a.dataset.temp);
+                    default:
+                        return 0;
+                }
+            });
+
+            // Reorder in DOM
+            visibleCards.forEach(card => weatherContainer.appendChild(card));
+        }
+
+        // Initialize stats on page load
+        calculateStats();
+
+        // Add animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.weather-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 </html>
