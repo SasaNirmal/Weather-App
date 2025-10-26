@@ -1,8 +1,8 @@
-package com.example.Weather.App.controller;
+package com.amongus.Weather.App.controller;
 
-import com.example.Weather.App.model.WeatherResponse;
-import com.example.Weather.App.service.CityService;
-import com.example.Weather.App.service.WeatherService;
+import com.amongus.Weather.App.model.WeatherResponse;
+import com.amongus.Weather.App.service.CityService;
+import com.amongus.Weather.App.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

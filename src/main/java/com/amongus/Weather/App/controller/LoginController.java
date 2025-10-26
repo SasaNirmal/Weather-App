@@ -1,4 +1,4 @@
-package com.example.Weather.App.controller;
+package com.amongus.Weather.App.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,6 @@
-package com.example.Weather.App.service;
+package com.amongus.Weather.App.service;
 
-import com.example.Weather.App.model.WeatherResponse;
+import com.amongus.Weather.App.model.WeatherResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

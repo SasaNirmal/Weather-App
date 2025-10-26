@@ -1,4 +1,4 @@
-package com.example.Weather.App.model;
+package com.amongus.Weather.App.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

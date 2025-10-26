@@ -1,4 +1,4 @@
-package com.example.Weather.App;
+package com.amongus.Weather.App;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

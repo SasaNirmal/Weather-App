@@ -1,4 +1,4 @@
-package com.example.Weather.App.service;
+package com.amongus.Weather.App.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,11 @@ public class CityService {
         }
 
         JsonNode arrayNode = null;
-        if (rootNode.isArray()) {
+
+        // Check if root has "List" key (actual structure in cities.json)
+        if (rootNode.has("List")) {
+            arrayNode = rootNode.get("List");
+        } else if (rootNode.isArray()) {
             arrayNode = rootNode;
         } else if (rootNode.has("cityCode")) {
             arrayNode = rootNode.get("cityCode");
@@ -44,15 +48,29 @@ public class CityService {
         }
 
         if (arrayNode == null || !arrayNode.isArray()) {
-            throw new IllegalArgumentException("`cityCode` or `cityCodes` array missing in `cities.json`.");
+            throw new IllegalArgumentException("`List`, `cityCode` or `cityCodes` array missing in `cities.json`.");
         }
 
-        for (JsonNode codeNode : arrayNode) {
-            if (codeNode.isNumber()) {
-                cityCodes.add(codeNode.asLong());
-            } else if (codeNode.isTextual()) {
+        for (JsonNode cityNode : arrayNode) {
+            // Handle city objects with "CityCode" field
+            if (cityNode.has("CityCode")) {
+                JsonNode codeNode = cityNode.get("CityCode");
+                if (codeNode.isTextual()) {
+                    try {
+                        cityCodes.add(Long.parseLong(codeNode.asText()));
+                    } catch (NumberFormatException ignored) {
+                        // skip invalid entries
+                    }
+                } else if (codeNode.isNumber()) {
+                    cityCodes.add(codeNode.asLong());
+                }
+            }
+            // Handle direct number or string values
+            else if (cityNode.isNumber()) {
+                cityCodes.add(cityNode.asLong());
+            } else if (cityNode.isTextual()) {
                 try {
-                    cityCodes.add(Long.parseLong(codeNode.asText()));
+                    cityCodes.add(Long.parseLong(cityNode.asText()));
                 } catch (NumberFormatException ignored) {
                     // skip invalid entries
                 }
